@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>韩语四十音闪卡</title>
+<style>
+/* ============================================================
+   CSS 变量 & 基础样式 — iOS 设计语言
+   ============================================================ */
+:root {
+  /* 颜色系统 */
+  --bg: #f2f2f7;
+  --card-bg: #ffffff;
+  --text: #1c1c1e;
+  --text-secondary: #8e8e93;
+  --accent: #007aff;
+  --accent-pressed: #0056cc;
+  --separator: #e5e5ea;
+  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.12);
+
+  /* 圆角 */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  /* 间距 */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 32px;
+
+  /* 字体 */
+  --font-system: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+                 'Malgun Gothic', 'Segoe UI', Roboto, 'Helvetica Neue',
+                 sans-serif;
+
+  /* 过渡 */
+  --transition-fast: 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-smooth: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-out: 0.25s cubic-bezier(0.55, 0, 1, 0.45);
+  --transition-in: 0.35s cubic-bezier(0, 0, 0.2, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  /* 使用 dvh 兜底：优先填满动态视口，兼容旧浏览器回退到 100% */
+  min-height: 100dvh;
+  overflow: hidden;
+  font-family: var(--font-system);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation; /* 禁止双击缩放，允许浏览器处理滚动 */
+}
+
+/* ============================================================
+   布局容器
+   ============================================================ */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top, 16px) 20px env(safe-area-inset-bottom, 16px);
+  gap: var(--spacing-md);
+}
+
+/* ============================================================
+   标题
+   ============================================================ */
+.app-title {
+  font-size: clamp(22px, 5vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-align: center;
+  padding-top: var(--spacing-xs);
+}
+
+/* ============================================================
+   模式选择器 — iOS 分段控件风格
+   ============================================================ */
+.mode-selector {
+  display: flex;
+  width: 100%;
+  background: var(--separator);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 3px;
+}
+
+.mode-btn {
+  flex: 1;
+  min-height: 48px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-system);
+  font-size: clamp(13px, 2.8vw, 15px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  padding: 8px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mode-btn:active {
+  transform: scale(0.96);
+}
+
+.mode-btn.active {
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow: var(--shadow-light);
+  font-weight: 600;
+}
+
+/* ============================================================
+   卡片容器
+   ============================================================ */
+.card-viewport {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.card-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: clamp(320px, 55vh, 480px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, opacity;
+  touch-action: none; /* 卡片区域完全由 JS 接管触摸 */
+  cursor: grab;
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+/* 卡片下方阴影层（模拟卡片叠放） */
+.card-shadow-layer {
+  position: absolute;
+  width: 92%;
+  height: 100%;
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-light);
+  opacity: 0.4;
+  z-index: -1;
+  top: 12px;
+  left: 4%;
+}
+
+/* 韩文字符 */
+.card-char {
+  font-family: var(--font-system);
+  font-size: clamp(100px, 18vw, 160px);
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+/* 滑动提示指示器 */
+.swipe-hint {
+  position: absolute;
+  bottom: clamp(16px, 4vh, 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.swipe-hint.hidden {
+  opacity: 0;
+}
+
+.swipe-hint-arrow {
+  font-size: 16px;
+}
+
+/* ============================================================
+   进度指示器
+   ============================================================ */
+.progress-bar {
+  text-align: center;
+  font-size: clamp(13px, 2.8vw, 15px);
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  padding: var(--spacing-xs) 0;
+}
+
+.progress-bar .current {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 1.15em;
+}
+
+/* ============================================================
+   导航按钮
+   ============================================================ */
+.nav-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  padding-bottom: var(--spacing-xs);
+}
+
+.nav-btn {
+  width: clamp(48px, 12vw, 64px);
+  height: clamp(48px, 12vw, 64px);
+  border-radius: 50%;
+  border: none;
+  background: var(--card-bg);
+  color: var(--accent);
+  font-size: clamp(20px, 4vw, 28px);
+  cursor: pointer;
+  box-shadow: var(--shadow-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.nav-btn:active {
+  transform: scale(0.9);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* 随机/打乱按钮 */
+.shuffle-btn {
+  width: clamp(48px, 10vw, 56px);
+  height: clamp(48px, 10vw, 56px);
+  border-radius: 50%;
+  border: none;
+  background: var(--card-bg);
+  color: var(--accent);
+  font-size: clamp(18px, 3.5vw, 24px);
+  cursor: pointer;
+  box-shadow: var(--shadow-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.shuffle-btn:active {
+  transform: scale(0.9) rotate(30deg);
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ============================================================
+   模式切换过渡
+   ============================================================ */
+.card.fade-out {
+  animation: cardFadeOut 0.2s ease forwards;
+}
+
+.card.fade-in {
+  animation: cardFadeIn 0.3s var(--transition-in) forwards;
+}
+
+@keyframes cardFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.92); }
+}
+
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   响应式 — 桌面端微调
+   ============================================================ */
+@media (min-width: 768px) {
+  .app-container {
+    padding-top: 24px;
+    gap: 24px;
+  }
+
+  .card-wrapper {
+    height: clamp(360px, 50vh, 500px);
+  }
+
+  .card {
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    max-width: 520px;
+  }
+}
+
+/* 小屏手机适配 */
+@media (max-width: 360px) {
+  .app-container {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .mode-btn {
+    font-size: 12px;
+    padding: 6px 2px;
+  }
+
+  .card-char {
+    font-size: 90px;
+  }
+
+  .nav-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .shuffle-btn {
+    width: 48px;
+    height: 48px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- 标题 -->
+  <h1 class="app-title">韩语四十音闪卡</h1>
+
+  <!-- 模式选择器 -->
+  <div class="mode-selector" id="modeSelector">
+    <button class="mode-btn active" data-mode="consonants">随机辅音</button>
+    <button class="mode-btn" data-mode="vowels">随机元音</button>
+    <button class="mode-btn" data-mode="all">双随机</button>
+  </div>
+
+  <!-- 卡片视口 -->
+  <div class="card-viewport" id="cardViewport">
+    <div class="card-wrapper">
+      <!-- 阴影层（模拟叠放） -->
+      <div class="card-shadow-layer"></div>
+      <!-- 主卡片 -->
+      <div class="card" id="mainCard">
+        <span class="card-char" id="cardChar">ㄱ</span>
+        <div class="swipe-hint" id="swipeHint">
+          <span class="swipe-hint-arrow">⟵</span> 滑动切换 <span class="swipe-hint-arrow">⟶</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 进度 -->
+  <div class="progress-bar" id="progressBar">
+    <span class="current" id="progressCurrent">1</span>
+    <span id="progressTotal"> / 19</span>
+  </div>
+
+  <!-- 导航按钮 -->
+  <div class="nav-buttons">
+    <button class="shuffle-btn" id="shuffleBtn" title="重新打乱" aria-label="重新打乱">🔀</button>
+    <button class="nav-btn" id="prevBtn" aria-label="上一张">◀</button>
+    <button class="nav-btn" id="nextBtn" aria-label="下一张">▶</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   韩语四十音闪卡 — 核心逻辑
+   ============================================================ */
+
+// ----- 字母数据源 -----
+const DATA = {
+  consonants: [
+    'ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ',
+    'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ'
+  ],
+  vowels: [
+    'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ',
+    'ㅐ', 'ㅒ', 'ㅔ', 'ㅖ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅢ'
+  ]
+};
+
+// 辅音19个 + 元音21个 = 40个
+DATA.all = [...DATA.consonants, ...DATA.vowels];
+
+// 验证数据完整性
+console.assert(DATA.consonants.length === 19, '辅音数量应为19，实际：' + DATA.consonants.length);
+console.assert(DATA.vowels.length === 21, '元音数量应为21，实际：' + DATA.vowels.length);
+console.assert(DATA.all.length === 40, '总数应为40，实际：' + DATA.all.length);
+
+// ----- DOM 引用 -----
+const modeSelector   = document.getElementById('modeSelector');
+const modeBtns       = modeSelector.querySelectorAll('.mode-btn');
+const cardViewport   = document.getElementById('cardViewport');
+const mainCard       = document.getElementById('mainCard');
+const cardChar       = document.getElementById('cardChar');
+const swipeHint      = document.getElementById('swipeHint');
+const progressCurrent = document.getElementById('progressCurrent');
+const progressTotal  = document.getElementById('progressTotal');
+const shuffleBtn     = document.getElementById('shuffleBtn');
+const prevBtn        = document.getElementById('prevBtn');
+const nextBtn        = document.getElementById('nextBtn');
+
+// ----- 应用状态 -----
+const state = {
+  mode: 'consonants',        // 'consonants' | 'vowels' | 'all'
+  cards: [],                 // 当前模式下的卡片序列（已打乱）
+  currentIndex: 0,           // 当前显示卡片的索引
+  isAnimating: false,        // 是否正在执行切换动画
+  hintHidden: false,         // 滑动提示是否已隐藏
+
+  // 拖动/滑动状态
+  dragActive: false,
+  dragStartX: 0,
+  dragStartY: 0,
+  dragCurrentX: 0,
+  dragIsHorizontal: null,    // null=未判定, true=水平滑动, false=垂直滚动
+  dragStartTime: 0,
+};
+
+// ----- 工具函数 -----
+
+/** Fisher-Yates 洗牌算法 */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  // 确保首张与打乱前不同（当数量 > 1 时），避免"没变化"的错觉
+  if (a.length > 1 && a[0] === arr[0]) {
+    [a[0], a[1]] = [a[1], a[0]];
+  }
+  return a;
+}
+
+/** 获取当前模式下的数据源 */
+function getSourceData(mode) {
+  switch (mode) {
+    case 'consonants': return DATA.consonants;
+    case 'vowels':     return DATA.vowels;
+    case 'all':        return DATA.all;
+    default:           return DATA.consonants;
+  }
+}
+
+/** 获取模式的中文名称 */
+function getModeName(mode) {
+  switch (mode) {
+    case 'consonants': return '辅音';
+    case 'vowels':     return '元音';
+    case 'all':        return '双随机';
+    default:           return '';
+  }
+}
+
+// ----- 核心操作 -----
+
+/** 重置当前模式的卡片序列 */
+function resetCards() {
+  const source = getSourceData(state.mode);
+  state.cards = shuffle(source);
+  state.currentIndex = 0;
+}
+
+/** 更新卡片显示 */
+function updateCardDisplay() {
+  if (state.cards.length === 0) return;
+  cardChar.textContent = state.cards[state.currentIndex];
+  updateProgress();
+}
+
+/** 更新进度文字 */
+function updateProgress() {
+  progressCurrent.textContent = state.currentIndex + 1;
+  progressTotal.textContent = ` / ${state.cards.length}`;
+}
+
+/** 隐藏滑动提示 */
+function hideHint() {
+  if (!state.hintHidden) {
+    state.hintHidden = true;
+    swipeHint.classList.add('hidden');
+  }
+}
+
+// ----- 卡片切换动画 -----
+
+/**
+ * 滑出旧卡片 → 更新内容 → 滑入新卡片
+ * @param {number} direction -1=向左滑出（下一张），+1=向右滑出（上一张）
+ * @returns {Promise} 动画完成
+ */
+function animateCardSwitch(direction) {
+  return new Promise((resolve) => {
+    if (state.isAnimating) { resolve(); return; }
+    state.isAnimating = true;
+    hideHint();
+
+    const cardWidth = mainCard.offsetWidth;
+    const viewportWidth = cardViewport.offsetWidth;
+    // 滑出距离：卡片宽度 + 一些额外距离确保完全离开视野
+    const slideDistance = direction * (cardWidth * 0.6 + viewportWidth * 0.3);
+
+    // 阶段1：滑出
+    mainCard.style.transition = 'transform 0.22s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.22s ease';
+    mainCard.style.transform = `translateX(${slideDistance}px)`;
+    mainCard.style.opacity = '0';
+
+    // 等待滑出完成
+    const onTransitionEnd = () => {
+      mainCard.removeEventListener('transitionend', onTransitionEnd);
+
+      // 更新卡片内容
+      cardChar.textContent = state.cards[state.currentIndex];
+      updateProgress();
+
+      // 阶段2：从对侧瞬间复位
+      const entryOffset = -direction * (cardWidth * 0.6 + viewportWidth * 0.3);
+      mainCard.style.transition = 'none';
+      mainCard.style.transform = `translateX(${entryOffset}px)`;
+
+      // 强制重排
+      mainCard.offsetHeight;
+
+      // 阶段3：滑入
+      mainCard.style.transition = 'transform 0.3s cubic-bezier(0, 0, 0.2, 1), opacity 0.3s ease';
+      mainCard.style.transform = 'translateX(0)';
+      mainCard.style.opacity = '1';
+
+      const onEnterEnd = () => {
+        mainCard.removeEventListener('transitionend', onEnterEnd);
+        mainCard.style.transition = '';
+        mainCard.style.transform = '';
+        mainCard.style.opacity = '';
+        state.isAnimating = false;
+        resolve();
+      };
+      mainCard.addEventListener('transitionend', onEnterEnd);
+    };
+
+    mainCard.addEventListener('transitionend', onTransitionEnd);
+  });
+}
+
+/**
+ * 卡片回弹（取消滑动）
+ */
+function animateCardSpringBack() {
+  mainCard.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease';
+  mainCard.style.transform = 'translateX(0)';
+  mainCard.style.opacity = '1';
+
+  const onEnd = () => {
+    mainCard.removeEventListener('transitionend', onEnd);
+    mainCard.style.transition = '';
+    mainCard.style.transform = '';
+    mainCard.style.opacity = '';
+  };
+  mainCard.addEventListener('transitionend', onEnd);
+}
+
+// ----- 导航操作 -----
+
+/** 切换到上一张 */
+async function goToPrev() {
+  if (state.isAnimating || state.cards.length === 0) return;
+  hideHint();
+
+  if (state.currentIndex > 0) {
+    state.currentIndex--;
+  } else {
+    // 循环到末尾
+    state.currentIndex = state.cards.length - 1;
+  }
+  await animateCardSwitch(1); // +1 = 向右滑出（视觉上卡片从左边来）
+}
+
+/** 切换到下一张 */
+async function goToNext() {
+  if (state.isAnimating || state.cards.length === 0) return;
+  hideHint();
+
+  if (state.currentIndex < state.cards.length - 1) {
+    state.currentIndex++;
+  } else {
+    // 到达末尾：重新打乱并从头开始
+    state.cards = shuffle(state.cards);
+    state.currentIndex = 0;
+    await animateCardSwitch(-1); // 使用滑出→滑入动画过渡
+    return;
+  }
+  await animateCardSwitch(-1); // -1 = 向左滑出（视觉上卡片从右边来）
+}
+
+/** 重新打乱 */
+async function doShuffle() {
+  if (state.isAnimating) return;
+  state.isAnimating = true;
+
+  // 淡出
+  mainCard.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+  mainCard.style.transform = 'scale(0.92)';
+  mainCard.style.opacity = '0';
+
+  await new Promise(r => setTimeout(r, 180));
+
+  // 打乱
+  state.cards = shuffle(getSourceData(state.mode));
+  state.currentIndex = 0;
+  cardChar.textContent = state.cards[0];
+  updateProgress();
+
+  // 淡入
+  mainCard.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
+  mainCard.style.transform = 'scale(1)';
+  mainCard.style.opacity = '1';
+
+  const onEnd = () => {
+    mainCard.removeEventListener('transitionend', onEnd);
+    mainCard.style.transition = '';
+    mainCard.style.transform = '';
+    mainCard.style.opacity = '';
+    state.isAnimating = false;
+  };
+  mainCard.addEventListener('transitionend', onEnd);
+}
+
+// ----- 模式切换 -----
+
+async function switchMode(mode) {
+  if (state.mode === mode || state.isAnimating) return;
+  state.isAnimating = true;
+
+  // 卡片淡出
+  mainCard.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+  mainCard.style.transform = 'scale(0.92)';
+  mainCard.style.opacity = '0';
+
+  await new Promise(r => setTimeout(r, 200));
+
+  // 更新状态
+  state.mode = mode;
+  state.cards = shuffle(getSourceData(mode));
+  state.currentIndex = 0;
+  state.hintHidden = false;
+
+  // 更新UI
+  cardChar.textContent = state.cards[0];
+  updateProgress();
+  swipeHint.classList.remove('hidden');
+
+  // 更新模式按钮
+  modeBtns.forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+
+  // 卡片淡入
+  mainCard.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
+  mainCard.style.transform = 'scale(1)';
+  mainCard.style.opacity = '1';
+
+  const onEnd = () => {
+    mainCard.removeEventListener('transitionend', onEnd);
+    mainCard.style.transition = '';
+    mainCard.style.transform = '';
+    mainCard.style.opacity = '';
+    state.isAnimating = false;
+  };
+  mainCard.addEventListener('transitionend', onEnd);
+}
+
+// ============================================================
+//  触摸 / 鼠标 统一滑动处理
+// ============================================================
+
+function getEventPos(e) {
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  if (e.changedTouches && e.changedTouches.length > 0) {
+    return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  }
+  return { x: e.clientX, y: e.clientY };
+}
+
+function onDragStart(e) {
+  if (state.isAnimating) return;
+  if (e.touches && e.touches.length > 1) return; // 忽略多指
+
+  const pos = getEventPos(e);
+  state.dragActive = true;
+  state.dragStartX = pos.x;
+  state.dragStartY = pos.y;
+  state.dragCurrentX = pos.x;
+  state.dragIsHorizontal = null; // 待判定
+  state.dragStartTime = Date.now();
+
+  // 取消卡片过渡
+  mainCard.style.transition = 'none';
+}
+
+function onDragMove(e) {
+  if (!state.dragActive) return;
+
+  const pos = getEventPos(e);
+  const dx = pos.x - state.dragStartX;
+  const dy = pos.y - state.dragStartY;
+
+  // 判定滑动方向（仅在移动超过阈值时判定）
+  if (state.dragIsHorizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+    state.dragIsHorizontal = Math.abs(dx) > Math.abs(dy);
+  }
+
+  // 如果是垂直滚动，放行浏览器默认行为
+  if (state.dragIsHorizontal === false) {
+    state.dragActive = true; // 保持活跃以便 touchend 清理
+    return;
+  }
+
+  // 水平滑动：阻止默认滚动
+  if (state.dragIsHorizontal === true && e.cancelable) {
+    e.preventDefault();
+  }
+
+  // 仅水平模式处理
+  if (state.dragIsHorizontal !== true) return;
+
+  state.dragCurrentX = pos.x;
+  const offsetX = pos.x - state.dragStartX;
+
+  // 添加轻微阻尼（滑动超过卡片宽度 40% 后增加阻力）
+  const cardWidth = mainCard.offsetWidth;
+  let dampedOffset = offsetX;
+  if (Math.abs(offsetX) > cardWidth * 0.4) {
+    const excess = Math.abs(offsetX) - cardWidth * 0.4;
+    const dampedExcess = excess * 0.5;
+    dampedOffset = Math.sign(offsetX) * (cardWidth * 0.4 + dampedExcess);
+  }
+
+  // 应用变换：平移 + 轻微旋转 + 透明度
+  const rotation = dampedOffset / cardWidth * 5; // 最大约5度旋转
+  const opacity = 1 - Math.min(Math.abs(dampedOffset) / (cardWidth * 0.6), 0.4);
+
+  mainCard.style.transform = `translateX(${dampedOffset}px) rotate(${rotation}deg)`;
+  mainCard.style.opacity = String(opacity);
+
+  hideHint();
+}
+
+function onDragEnd(e) {
+  if (!state.dragActive) return;
+
+  const pos = getEventPos(e);
+  const dx = pos.x - state.dragStartX;
+  const cardWidth = mainCard.offsetWidth;
+  const threshold = cardWidth * 0.3; // 30% 阈值
+  const elapsed = Date.now() - state.dragStartTime;
+  const velocity = Math.abs(dx) / Math.max(elapsed, 1); // px/ms
+
+  // 快速滑动（速度 > 0.5 px/ms 且方向正确）也触发切换
+  const isFlick = velocity > 0.5 && Math.abs(dx) > cardWidth * 0.1;
+
+  if (state.dragIsHorizontal === true && (Math.abs(dx) > threshold || isFlick)) {
+    // 提交切换
+    if (dx > 0) {
+      // 向右滑 → 上一张
+      if (state.currentIndex > 0) {
+        state.currentIndex--;
+      } else {
+        state.currentIndex = state.cards.length - 1;
+      }
+      commitSwipe(1);
+    } else {
+      // 向左滑 → 下一张
+      if (state.currentIndex < state.cards.length - 1) {
+        state.currentIndex++;
+      } else {
+        // 到达末尾：重新打乱并进入第一张
+        state.cards = shuffle(state.cards);
+        state.currentIndex = 0;
+        commitSwipe(-1);
+        state.dragActive = false;
+        state.dragIsHorizontal = null;
+        return;
+      }
+      commitSwipe(-1);
+    }
+  } else {
+    // 回弹
+    animateCardSpringBack();
+  }
+
+  state.dragActive = false;
+  state.dragIsHorizontal = null;
+}
+
+/** 提交滑动（从拖拽状态进入切换动画） */
+function commitSwipe(direction) {
+  state.isAnimating = true;
+  hideHint();
+
+  const cardWidth = mainCard.offsetWidth;
+  const viewportWidth = cardViewport.offsetWidth;
+  const slideDistance = direction * (cardWidth * 0.5 + viewportWidth * 0.3);
+
+  // 滑出
+  mainCard.style.transition = 'transform 0.2s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.2s ease';
+  mainCard.style.transform = `translateX(${slideDistance}px)`;
+  mainCard.style.opacity = '0';
+
+  const onOutEnd = () => {
+    mainCard.removeEventListener('transitionend', onOutEnd);
+
+    // 更新内容
+    cardChar.textContent = state.cards[state.currentIndex];
+    updateProgress();
+
+    // 对侧复位
+    const entryOffset = -direction * (cardWidth * 0.5 + viewportWidth * 0.3);
+    mainCard.style.transition = 'none';
+    mainCard.style.transform = `translateX(${entryOffset}px)`;
+
+    mainCard.offsetHeight; // 强制重排
+
+    // 滑入
+    mainCard.style.transition = 'transform 0.28s cubic-bezier(0, 0, 0.2, 1), opacity 0.28s ease';
+    mainCard.style.transform = 'translateX(0)';
+    mainCard.style.opacity = '1';
+
+    const onInEnd = () => {
+      mainCard.removeEventListener('transitionend', onInEnd);
+      mainCard.style.transition = '';
+      mainCard.style.transform = '';
+      mainCard.style.opacity = '';
+      state.isAnimating = false;
+    };
+    mainCard.addEventListener('transitionend', onInEnd);
+  };
+  mainCard.addEventListener('transitionend', onOutEnd);
+}
+
+// ----- 事件绑定 -----
+
+// 触摸事件（移动端）
+mainCard.addEventListener('touchstart', onDragStart, { passive: false });
+cardViewport.addEventListener('touchmove', onDragMove, { passive: false });
+document.addEventListener('touchend', onDragEnd);
+document.addEventListener('touchcancel', onDragEnd);
+
+// 鼠标事件（桌面端拖拽）
+mainCard.addEventListener('mousedown', (e) => {
+  e.preventDefault(); // 防止文本选择
+  onDragStart(e);
+});
+document.addEventListener('mousemove', (e) => {
+  if (state.dragActive) {
+    e.preventDefault();
+    onDragMove(e);
+  }
+});
+document.addEventListener('mouseup', (e) => {
+  if (state.dragActive) {
+    onDragEnd(e);
+  }
+});
+// 鼠标离开窗口也结束拖拽
+document.addEventListener('mouseleave', () => {
+  if (state.dragActive) {
+    state.dragActive = false;
+    state.dragIsHorizontal = null;
+    animateCardSpringBack();
+  }
+});
+
+// 模式按钮
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode;
+    if (mode && mode !== state.mode) {
+      switchMode(mode);
+    }
+  });
+});
+
+// 导航按钮
+prevBtn.addEventListener('click', goToPrev);
+nextBtn.addEventListener('click', goToNext);
+shuffleBtn.addEventListener('click', doShuffle);
+
+// 键盘导航（桌面端增强）
+document.addEventListener('keydown', (e) => {
+  // 忽略输入框中的按键
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  switch (e.key) {
+    case 'ArrowLeft':
+      e.preventDefault();
+      goToPrev();
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      goToNext();
+      break;
+    case 'ArrowUp':
+    case ' ':
+      e.preventDefault();
+      doShuffle();
+      break;
+    case '1':
+      e.preventDefault();
+      switchMode('consonants');
+      break;
+    case '2':
+      e.preventDefault();
+      switchMode('vowels');
+      break;
+    case '3':
+      e.preventDefault();
+      switchMode('all');
+      break;
+  }
+});
+
+// 防止卡片区域的双指缩放和意外手势（但保留页面其他区域的垂直滚动）
+cardViewport.addEventListener('gesturestart', (e) => {
+  e.preventDefault();
+});
+
+// ----- 初始化 -----
+
+(function init() {
+  state.mode = 'consonants';
+  state.cards = shuffle(DATA.consonants);
+  state.currentIndex = 0;
+  cardChar.textContent = state.cards[0];
+  updateProgress();
+
+  // 延迟显示提示，给用户时间看到第一张卡片
+  swipeHint.classList.remove('hidden');
+})();
+
+// ----- 性能优化：使用 requestIdleCallback 或 setTimeout 延迟非关键初始化 -----
+console.log('✅ 韩语四十音闪卡已就绪');
+console.log('   📱 支持触摸滑动 | 🖱️ 支持鼠标拖拽 | ⌨️ 支持键盘操作');
+console.log('   辅音 19 个 | 元音 21 个 | 共计 40 个');
+console.log('   键盘快捷键: ← → 切换卡片 | 空格 打乱 | 1/2/3 切换模式');
+</script>
+
+</body>
+</html>
